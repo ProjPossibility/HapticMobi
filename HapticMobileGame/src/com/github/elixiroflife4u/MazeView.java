@@ -11,7 +11,7 @@ import android.view.View;
 
 public class MazeView extends View {
 
-	private boolean mIsMagnified = true; // specifies if magnification is on or off. default is on
+	private boolean mIsMagnified = false; // specifies if magnification is on or off. default is on
 	private Cell mCells[][];
 	private int mNumCellsX = 1;
 	private int mNumCellsY = 1;
@@ -634,21 +634,27 @@ public class MazeView extends View {
 		else
 		{
 			Paint paint = new Paint();
-		
+			paint.setColor(0xFF000000);
+			canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
 			// draw ball
-			paint.setColor(0xff000000);				// 0.45 instead of 0.5 to be slightly smaller than cell
+			paint.setColor(0xFFFFFFFF);				// 0.45 instead of 0.5 to be slightly smaller than cell
 			//canvas.drawCircle( canvas.getWidth()/2 , (((mGridOriginY+mBallY)/((float)(mCellSize * mNumCellsY)))*((float)canvas.getHeight())), 0.35f * canvas.getWidth(), paint);
 			//System.err.println("grid coord y=" + (mGridOriginY+mBallY)+ "grid height=" + (mCellSize * mNumCellsY) + "canvas height=" + canvas.getHeight());
 			// Calculate intervals: coordinate range ==> cell number
 			int intervalX = (int) canvas.getWidth()/mNumCellsX;
 			int intervalY = (int) canvas.getHeight()/mNumCellsY;
-			//System.err.println("intervalx = " + intervalX + "  intervaly = " + intervalY + "  X=" + (mGridOriginX+mBallX) + "  Y=" + (mGridOriginY+mBallY));
+			System.err.println("intervalx = " + intervalX + "  intervaly = " + intervalY + "  X=" + (mGridOriginX+mBallX) + "  Y=" + (mGridOriginY+mBallY));
 			// Get cells to display
-			int cell_x1 = (int) (((mGridOriginX+mBallX)/intervalX));
+			int cell_x1 = (int) (((mGridOriginX+mBallX)/intervalX)+0.5);
 			//int cell_x2 = ++cell_x1; // draw only consecutive vertical two cells
-			int cell_y1 = (int) (((mGridOriginY+mBallY)/intervalY));
+			int cell_y1 = (int) (((mGridOriginY+mBallY)/intervalY)+0.5);
 			int cell_y2 = cell_y1 + 1;
-			//System.err.println ("x1 " + cell_x1 + "  y1 " + cell_y1 + "  mBallY=" + mBallY);
+			System.err.println ("x1 " + cell_x1 + "  y1 " + cell_y1 + "  mBallY=" + mBallY);
+			if (cell_y2 >= mNumCellsY || cell_y1 >= mNumCellsY)
+			{
+				cell_y1 = mNumCellsY - 1;
+				cell_y2 = mNumCellsY - 2;
+			}
 			Cell c1 = mCells[cell_y1][cell_x1];
 			Cell c2 = mCells[cell_y2][cell_x1];
 			if ((mBallY/mCellSize) <= cell_y1)
@@ -661,7 +667,7 @@ public class MazeView extends View {
 				System.err.println("BOTTOM");
 				canvas.drawCircle(canvas.getWidth()/2, (canvas.getHeight()/0.75f), 0.35f * mCellSize * 4, paint);
 			}
-			paint.setColor(mBGColor);
+			paint.setColor(0XFFFFFFFF);
 			paint.setStrokeWidth(53.5f);
 			// Display cells
 			if (c1.northWall)
