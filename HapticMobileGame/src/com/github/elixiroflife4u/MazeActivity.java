@@ -20,6 +20,7 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private WakeLock mWakeLock;
+    private GestureDetector gd;
     
 	@Override
     public void onCreate(Bundle savedInstanceState) {
