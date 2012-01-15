@@ -8,6 +8,7 @@ import android.view.View;
 
 public class MazeView extends View {
 
+	private boolean magnify = true; // specifies if magnification is on or off. default is on
 	private Cell mCells[][];
 	private int mNumCellsX = 1;
 	private int mNumCellsY = 1;
@@ -218,43 +219,70 @@ public class MazeView extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		// draw maze background (may not fill entire screen)
-		Paint paint = new Paint();
-		paint.setColor(mBGColor);
-		canvas.drawRect(mGridOriginX, mGridOriginY, mGridOriginX+mCellSize*mNumCellsX, mGridOriginY+mCellSize*mNumCellsY, paint);
+		if (!magnify)
+		{
+			// draw maze background (may not fill entire screen)
+			Paint paint = new Paint();
+			paint.setColor(mBGColor);
+			canvas.drawRect(mGridOriginX, mGridOriginY, mGridOriginX+mCellSize*mNumCellsX, mGridOriginY+mCellSize*mNumCellsY, paint);
 
-		// draw cell walls
-		int ix, iy;
-		float left, top, right, btm;
-		float halfWallThickness = 0.5f * mWallThickness;
-		paint.setColor(mWallColor);
-		
-		for (ix = 0; ix < mNumCellsX; ix++) {
-			for (iy = 0; iy < mNumCellsY; iy++) {
-				float x = mGridOriginX + mCellSize * ix;
-				float y = mGridOriginY + mCellSize * iy;
-				Cell c = mCells[iy][ix];
-				if (iy > 0 && c.northWall) {
-					// horizontal wall
-					left = x;
-					right = x + mCellSize;
-					top = y - halfWallThickness;
-					btm = y + halfWallThickness;
-					canvas.drawRect(left, top, right, btm, paint);
-				}
-				if (ix > 0 && c.westWall) {
-					// vertical wall
-					top = y;
-					btm = y + mCellSize;
-					left = x - halfWallThickness;
-					right = x + halfWallThickness;
-					canvas.drawRect(left, top, right, btm, paint);
+			// draw cell walls
+			int ix, iy;
+			float left, top, right, btm;
+			float halfWallThickness = 0.5f * mWallThickness;
+			paint.setColor(mWallColor);
+			
+			for (ix = 0; ix < mNumCellsX; ix++) {
+				for (iy = 0; iy < mNumCellsY; iy++) {
+					float x = mGridOriginX + mCellSize * ix;
+					float y = mGridOriginY + mCellSize * iy;
+					Cell c = mCells[iy][ix];
+					if (iy > 0 && c.northWall) {
+						// horizontal wall
+						left = x;
+						right = x + mCellSize;
+						top = y - halfWallThickness;
+						btm = y + halfWallThickness;
+						canvas.drawRect(left, top, right, btm, paint);
+					}
+					if (ix > 0 && c.westWall) {
+						// vertical wall
+						top = y;
+						btm = y + mCellSize;
+						left = x - halfWallThickness;
+						right = x + halfWallThickness;
+						canvas.drawRect(left, top, right, btm, paint);
+					}
 				}
 			}
+			
+			// draw ball
+			paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
+			canvas.drawCircle(mGridOriginX+mBallX, mGridOriginY+mBallY, 0.45f * mCellSize, paint);
 		}
-		
-		// draw ball
-		paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
-		canvas.drawCircle(mGridOriginX+mBallX, mGridOriginY+mBallY, 0.45f * mCellSize, paint);
+		else
+		{
+			Paint paint = new Paint();
+			// draw ball
+			paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
+			canvas.drawCircle( (mGridOriginX+mBallX*4)%canvas.getWidth() , (mGridOriginY+mBallY*7)%canvas.getHeight(), 0.45f * mCellSize * 4, paint);
+			
+			// Get cells to display
+			int x1 = ((int)(mGridOriginX+mBallX)%mNumCellsX);
+			//int x2 = (int) (((mGridOriginX+mBallX)%mNumCellsX) + 0.5);
+			int y1 = ((int)(mGridOriginY+mBallY)%mNumCellsY);
+			//int y2 = (int) (((mGridOriginY+mBallY)%mNumCellsY) + 0.5);
+			System.err.println ("x1" + x1 + "y1" + y1);
+			Cell c1 = mCells[y1][x1];
+			//Cell c2 = mCells[y2][x2];
+			
+			paint.setColor(mBGColor);
+			// Display cells
+			if (c1.eastWall)
+			{
+				canvas.drawLine(canvas.getWidth(), mGridOriginY, canvas.getWidth(), canvas.getHeight()/2, paint);
+			}
+			
+		}
 	}
 }

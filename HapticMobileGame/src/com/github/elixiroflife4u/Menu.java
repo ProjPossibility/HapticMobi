@@ -37,7 +37,7 @@ public class Menu extends Activity{
 	    	final Button difficultButton = (Button) findViewById(R.id.difficult);
 	    	
 	    	//default level is easy:
-	    	easyButton.setSelected(true);
+	    	easyButton.setSelected(true); 
 	    	
 	    	// START BUTTON:
 	         startButton.setOnClickListener(new View.OnClickListener() { 
