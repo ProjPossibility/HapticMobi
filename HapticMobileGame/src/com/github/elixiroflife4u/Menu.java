@@ -31,7 +31,7 @@ public class Menu extends Activity{
 	         startButton.setOnClickListener(new View.OnClickListener() { 
 	        	 // If clicked, start game 
 	        	 public void onClick(View v) {
-	                 Intent intent = new Intent (Menu.this, Maze.class);
+	                 Intent intent = new Intent (Menu.this, MazeActivity.class);
 	                 // to pass level param to the maze activity
 	                 intent.putExtra("level", level);
 	                 startActivity(intent);  
