@@ -2,8 +2,10 @@ package com.github.elixiroflife4u;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.view.View;
 import android.widget.Button;
 
@@ -20,12 +22,22 @@ public class Menu extends Activity{
 	    public void onCreate(Bundle savedInstanceState) {
 	    	super.onCreate(savedInstanceState);
 	    	setContentView(R.layout.menu);
+	    	// Get instance of Vibrator from current Context
+			Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+			// Vibrate 3 short bursts
+		
+			long[] pattern = {300,200,200,200,200,200,200};
+			v.vibrate(pattern,-1);
 
 	    	// REGISTER ALL BUTTONS:
 	    	final Button startButton = (Button) findViewById(R.id.start);
 	    	final Button easyButton = (Button) findViewById(R.id.easy);
 	    	final Button mediumButton = (Button) findViewById(R.id.medium);
 	    	final Button difficultButton = (Button) findViewById(R.id.difficult);
+	    	
+	    	//default level is easy:
+	    	easyButton.setSelected(true);
 	    	
 	    	// START BUTTON:
 	         startButton.setOnClickListener(new View.OnClickListener() { 
@@ -44,14 +56,12 @@ public class Menu extends Activity{
 		         // If clicked, turn easy button red and return others to normal    
 	        	 public void onClick(View v) {
 		                 level = "easy";
-		                 easyButton.setBackgroundColor(colorSelect);
-		                 easyButton.setTextColor(colorTextSelect);
+		                 easyButton.setSelected(true);
+
+		                 // return other buttons to normal
+		                 mediumButton.setSelected(false);
+		                 difficultButton.setSelected(false);
 		                 
-		                 //return other buttons to normal
-		                 mediumButton.setBackgroundColor(colorNorm);
-		                 mediumButton.setTextColor(colorTextNorm);
-		                 difficultButton.setBackgroundColor(colorNorm);
-		                 difficultButton.setTextColor(colorTextNorm);
 		             }
 		         });
 		    
@@ -60,14 +70,11 @@ public class Menu extends Activity{
 		        // If clicked, turn medium button red and return others to normal     
 		    	public void onClick(View v) {
 		                 level = "medium";
-		                 mediumButton.setBackgroundColor(colorSelect);
-		                 mediumButton.setTextColor(colorTextSelect);
-		                 
-		                 //return other buttons to normal
-		                 easyButton.setBackgroundColor(colorNorm);
-		                 easyButton.setTextColor(colorTextNorm);
-		                 difficultButton.setBackgroundColor(colorNorm);
-		                 difficultButton.setTextColor(colorTextNorm);
+		                 mediumButton.setSelected(true);
+
+		                 // return other buttons to normal
+		                 easyButton.setSelected(false);
+		                 difficultButton.setSelected(false);
 		                 
 		             }
 		         });
@@ -77,14 +84,11 @@ public class Menu extends Activity{
 		        // If clicked, turn difficult button red and return others to normal     
 		    	public void onClick(View v) {
 		                 level = "difficult";
-		                 difficultButton.setBackgroundColor(colorSelect);
-		                 difficultButton.setTextColor(colorTextSelect);
-		                 
-		                 //return other buttons to normal
-		                 easyButton.setBackgroundColor(colorNorm);
-		                 easyButton.setTextColor(colorTextNorm);
-		                 mediumButton.setBackgroundColor(colorNorm);
-		                 mediumButton.setTextColor(colorTextNorm);
+		                 difficultButton.setSelected(true);
+
+		                 // return other buttons to normal
+		                 easyButton.setSelected(false);
+		                 mediumButton.setSelected(false);
 		                 
 		             }
 		         });

@@ -1,8 +1,10 @@
 package com.github.elixiroflife4u;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Vibrator;
 
 public class HapticMobileGameActivity extends Activity {
     /** Called when the activity is first created. */
@@ -14,7 +16,14 @@ public class HapticMobileGameActivity extends Activity {
     		@Override 
     		public void run() {
     			try {
-					sleep(2000);
+    				// Get instance of Vibrator from current Context
+    				Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+    			
+    				// Vibrate for 1 second
+    				v.vibrate(1000);
+    				// wait for vibration:
+    				sleep(1000);
+    				
 				} catch (InterruptedException e) {
 					// do nothing
 				}
