@@ -20,7 +20,6 @@ public class MazeActivity extends Activity implements OnTouchListener {
 		if (extras != null)
 		{
 			String difficulty = extras.getString("level");
-			//System.out.println(value);
 			if (difficulty.equalsIgnoreCase("medium")) {
 				nx = 6;
 				ny = 11;
@@ -44,15 +43,16 @@ public class MazeActivity extends Activity implements OnTouchListener {
 		if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
 			float x = event.getX();
 			float y = event.getY();
-			float dx = 0.f, dy = 0.f;
 			Log.v("maze", "touch x="+x+" y="+y);
 			
-			if (y < 200.f) dy = -4.f; // up
-			else if (y > 500.f) dy = 4.f; // down
-			else if (x < 200.f) dx = -4.f; // left
-			else dx = 4.f; // right
-			
-			mazeview.shiftBallPosition(dx, dy);
+			if (y < 200.f)
+				mazeview.shiftBallUp(8.f);
+			else if (y > 500.f)
+				mazeview.shiftBallDown(8.f);
+			else if (x < 200.f)
+				mazeview.shiftBallLeft(8.f);
+			else
+				mazeview.shiftBallRight(8.f);
 			return true;
 		}
 		return false;

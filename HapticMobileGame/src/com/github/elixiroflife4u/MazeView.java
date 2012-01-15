@@ -1,6 +1,5 @@
 package com.github.elixiroflife4u;
 
-import android.util.Log;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -12,18 +11,22 @@ public class MazeView extends View {
 	private int mNumCellsX = 1;
 	private int mNumCellsY = 1;
 	private float mCellSize;
-	private int mWallColor = 0xFFFFFFFF;
+	// maze background color
 	private int mBGColor = 0xFF503010;
-	private float mWallThickness = 2.0f;
 	// grid (maze) origin w.r.t. view
 	private float mGridOriginX, mGridOriginY;
-	
-	// coordinates of ball center w.r.t. maze rect
+	// maze wall color
+	private int mWallColor = 0xFFFFFFFF;
+	// maze wall thickness in pixels
+	private float mWallThickness = 2.0f;
+	// pixel coordinates of ball center w.r.t. maze rect
 	private float mBallX = 0.f, mBallY = 0.f;
 	// discretized ball coordinates
-	// ball may be (partially) in two cells in the X direction and two cells in the Y direction
-	// always true: _i1 <= _i2
-	private int mBallXi1 = 0, mBallXi2 = 0, mBallYi1 = 0, mBallYi2 = 0;
+	// (which cell contains the center of the ball)
+	private int mBallCellX, mBallCellY;
+	// ball offset within its current cell
+	private enum Dir {NONE,NORTH,SOUTH,EAST,WEST};
+	private Dir mBallCellOffset = Dir.NONE;
 	// ball foreground color
 	private int mBallColor = 0xFF00FFFF;
 	
@@ -40,7 +43,7 @@ public class MazeView extends View {
 		mGridOriginX = 0.5f * (w - mCellSize * mNumCellsX);
 		mGridOriginY = 0.5f * (h - mCellSize * mNumCellsY);
 		
-		setBallPosition(mBallXi1, mBallYi1);
+		setBallPosition(mBallCellX, mBallCellY);
 	}
 	
 	public void setGridDim(int cellsAcross, int cellsDown) {
@@ -56,22 +59,6 @@ public class MazeView extends View {
 		//	Log.v("maze", "maze failed test");
 		mCells = maze.getMaze();
 		
-/*		mCells = new Cell[mNumCellsX][mNumCellsY];
-		
-		// create sample maze
-		for (int ix = 0; ix < mNumCellsX; ix++)
-			for (int iy = 0; iy < mNumCellsY; iy++)
-				mCells[ix][iy] = new Cell(true, true);
-		
-		mCells[1][2].northWall = false;
-		mCells[1][3].northWall = false;
-		mCells[2][3].westWall = false;
-		mCells[3][3].westWall = false;
-		mCells[3][3].northWall = false;
-		mCells[3][2].northWall = false;
-		mCells[3][1].westWall = false;
-		mCells[2][1].westWall = false;
-*/
 		invalidate();
 	}
 	
@@ -110,115 +97,180 @@ public class MazeView extends View {
 		mBallY = mCellSize * (cellY + 0.5f);
 		
 		// discretized ball position(s)
-		mBallXi1 = cellX;
-		mBallXi2 = cellX;
-		mBallYi1 = cellY;
-		mBallYi2 = cellY;
+		mBallCellX = cellX;
+		mBallCellY = cellY;
+		mBallCellOffset = Dir.NONE;
 		
 		invalidate();
 	}
 	
-	public void shiftBallPosition(float dx, float dy) {
+	private void recomputeBallCellX()
+	{
+		mBallCellX = (int)(mBallX / mCellSize);
+		float distFromCellCenter = mBallX - (mCellSize*mBallCellX + 0.5f*mCellSize);
+		// if close to cell center, just move it to center
+		if (Math.abs(distFromCellCenter) < 4.f) {
+			mBallX -= distFromCellCenter;
+			mBallCellOffset = Dir.NONE;
+		}
+		else if (distFromCellCenter < 0.f)
+			mBallCellOffset = Dir.WEST;
+		else
+			mBallCellOffset = Dir.EAST;
 		
-		Log.v("maze", "shiftBallPosition("+dx+","+dy+")");
+		invalidate();
+	}
+	
+	private void recomputeBallCellY()
+	{
+		mBallCellY = (int)(mBallY / mCellSize);
+		float distFromCellCenter = mBallY - (mCellSize*mBallCellY + 0.5f*mCellSize);
+		// if close to cell center, just move it to center
+		if (Math.abs(distFromCellCenter) < 4.f) {
+			mBallY -= distFromCellCenter;
+			mBallCellOffset = Dir.NONE;
+		}
+		else if (distFromCellCenter < 0.f)
+			mBallCellOffset = Dir.NORTH;
+		else
+			mBallCellOffset = Dir.SOUTH;
 		
-		// shift the ball as much as possible
-		// (this is the wall collision detection)
-		if (dx < 0.f)
-			dx = Math.max(dx, -ballMaxShiftLeft());
-		else if (dx > 0.f)
-			dx = Math.min(dx, ballMaxShiftRight());
-		if (dy < 0.f)
-			dy = Math.max(dy, -ballMaxShiftUp());
-		else if (dy > 0.f)
-			dy = Math.min(dy, ballMaxShiftDown());
+		invalidate();
+	}
+	
+	public void shiftBallLeft(float dx)
+	{
+		if (mBallCellOffset == Dir.NORTH || mBallCellOffset == Dir.SOUTH)
+			return;
 		
-		Log.v("maze", "    clipped to "+dx+" "+dy);
-		
-		mBallX += dx;
-		mBallY += dy;
-		
-		// recompute discretized ball coordinates
 		float rad = 0.5f*mCellSize;
 		
-		float tmp = (mBallX - rad) / mCellSize;
-		float tmpfloor = (float)Math.floor(tmp);
-		mBallXi1 = (int) tmpfloor;
-		//mBallXi2 = (int) Math.ceil((mBallX + rad) / mCellSize);
-		mBallXi2 = mBallXi1 + ((tmp - tmpfloor <= 1.e-5f) ? 0 : 1);
-		
-		tmp = (mBallY - rad) / mCellSize;
-		tmpfloor = (float)Math.floor(tmp);
-		mBallYi1 = (int) tmpfloor;
-		//mBallYi2 = (int) Math.ceil((mBallY + rad) / mCellSize);
-		mBallYi2 = mBallYi1 + ((tmp - tmpfloor <= 1.e-5f) ? 0 : 1);
-		
-		Log.v("maze", String.format("    x1=%d x2=%d y1=%d y2=%d", mBallXi1, mBallXi2, mBallYi1, mBallYi2));
-		
-		invalidate();
-	}
-	
-	private float ballMaxShiftUp() {
-		
-		float distToWallAbove = (mBallY - mCellSize*0.5f) - mBallYi1*mCellSize;
-		
-		// look upwards for walls
-		for (int y = mBallYi1; y > 0; y--) {
-			if (mCells[y][mBallXi1].northWall || mCells[y][mBallXi2].northWall)
+		// compute total space to the left
+		float leftspace = 0.f;
+		int westwallcheck = mBallCellX;
+		if (mBallCellOffset == Dir.EAST) {
+			assert(mBallCellX < mNumCellsX-1);
+			leftspace = (mBallX - rad) - (mCellSize*mBallCellX);
+		}
+		else if (mBallCellOffset == Dir.WEST) {
+			assert(mBallCellX > 0);
+			leftspace = (mBallX - rad) - (mCellSize*(mBallCellX-1));
+			westwallcheck--;
+		}
+		while (westwallcheck > 0 && leftspace < dx) {
+			if (mCells[mBallCellY][westwallcheck].westWall)
 				break;
-			distToWallAbove += mCellSize;
+			leftspace += mCellSize;
+			westwallcheck--;
 		}
 		
-		return distToWallAbove;
+		// move ball as much as possible
+		mBallX -= Math.min(dx, leftspace);
+		
+		// recompute discrete ball position
+		recomputeBallCellX();
 	}
 	
-	private float ballMaxShiftDown() {
+	public void shiftBallRight(float dx)
+	{
+		if (mBallCellOffset == Dir.NORTH || mBallCellOffset == Dir.SOUTH)
+			return;
 		
-		int ybelow = mBallYi2 + ((mBallYi2 == mBallYi1) ? 1 : 0);
-		float distToWallBelow = ybelow*mCellSize - (mBallY + mCellSize*0.5f);
+		float rad = 0.5f*mCellSize;
 		
-		// look downwards for walls
-		for (int y = ybelow; y < mNumCellsY; y++) {
-			if (mCells[y][mBallXi1].northWall || mCells[y][mBallXi2].northWall)
+		// compute total space to the right
+		float rightspace = 0.f;
+		int westwallcheck = mBallCellX+1;
+		if (mBallCellOffset == Dir.EAST) {
+			assert(mBallCellX < mNumCellsX-1);
+			rightspace = (mCellSize*(mBallCellX+2)) - (mBallX + rad);
+			westwallcheck++;
+		}
+		else if (mBallCellOffset == Dir.WEST) {
+			rightspace = (mCellSize*(mBallCellX+1)) - (mBallX + rad);
+		}
+		while (westwallcheck < mNumCellsX && rightspace < dx) {
+			if (mCells[mBallCellY][westwallcheck].westWall)
 				break;
-			distToWallBelow += mCellSize;
+			rightspace += mCellSize;
+			westwallcheck++;
 		}
 		
-		return distToWallBelow;
+		// move ball as much as possible
+		mBallX += Math.min(dx, rightspace);
+		
+		// recompute discrete ball position
+		recomputeBallCellX();
 	}
 	
-	private float ballMaxShiftLeft() {
+	public void shiftBallUp(float dy)
+	{
+		if (mBallCellOffset == Dir.WEST || mBallCellOffset == Dir.EAST)
+			return;
 		
-		float distToWallLeft = (mBallX - mCellSize*0.5f) - mBallXi1*mCellSize;
+		float rad = 0.5f*mCellSize;
 		
-		// look leftwards for walls
-		for (int x = mBallXi1; x > 0; x--) {
-			if (mCells[mBallYi1][x].westWall || mCells[mBallYi2][x].westWall)
+		// compute total space up
+		float upspace = 0.f;
+		int northwallcheck = mBallCellY;
+		if (mBallCellOffset == Dir.SOUTH) {
+			assert(mBallCellY < mNumCellsY-1);
+			upspace = (mBallY - rad) - (mCellSize*mBallCellY);
+		}
+		else if (mBallCellOffset == Dir.NORTH) {
+			assert(mBallCellY > 0);
+			upspace = (mBallY - rad) - (mCellSize*(mBallCellY-1));
+			northwallcheck--;
+		}
+		while (northwallcheck > 0 && upspace < dy) {
+			if (mCells[northwallcheck][mBallCellX].northWall)
 				break;
-			distToWallLeft += mCellSize;
+			upspace += mCellSize;
+			northwallcheck--;
 		}
 		
-		return distToWallLeft;
+		// move ball as much as possible
+		mBallY -= Math.min(dy, upspace);
+		
+		// recompute discrete ball position
+		recomputeBallCellY();
 	}
 	
-	private float ballMaxShiftRight() {
-
-		int xright = mBallXi2 + ((mBallXi2 == mBallXi1) ? 1 : 0);
-		float distToWallRight = xright*mCellSize - (mBallX + mCellSize*0.5f);
+	public void shiftBallDown(float dy)
+	{
+		if (mBallCellOffset == Dir.WEST || mBallCellOffset == Dir.EAST)
+			return;
 		
-		// look rightwards for walls
-		for (int x = xright; x < mNumCellsX; x++) {
-			if (mCells[mBallYi1][x].westWall || mCells[mBallYi2][x].westWall)
+		float rad = 0.5f*mCellSize;
+		
+		// compute total space down
+		float downspace = 0.f;
+		int northwallcheck = mBallCellY+1;
+		if (mBallCellOffset == Dir.SOUTH) {
+			assert(mBallCellY < mNumCellsY-1);
+			downspace = (mCellSize*(mBallCellY+2)) - (mBallY + rad);
+			northwallcheck++;
+		}
+		else if (mBallCellOffset == Dir.NORTH) {
+			downspace = (mCellSize*(mBallCellY+1)) - (mBallY + rad);
+		}
+		while (northwallcheck < mNumCellsY && downspace < dy) {
+			if (mCells[northwallcheck][mBallCellX].northWall)
 				break;
-			distToWallRight += mCellSize;
+			downspace += mCellSize;
+			northwallcheck++;
 		}
 		
-		return distToWallRight;
+		// move ball as much as possible
+		mBallY += Math.min(dy, downspace);
+		
+		// recompute discrete ball position
+		recomputeBallCellY();
 	}
-
+	
 	@Override
 	protected void onDraw(Canvas canvas) {
-		// draw maze background (may not fill entire screen)
+		// draw maze background (may not fill entire view)
 		Paint paint = new Paint();
 		paint.setColor(mBGColor);
 		canvas.drawRect(mGridOriginX, mGridOriginY, mGridOriginX+mCellSize*mNumCellsX, mGridOriginY+mCellSize*mNumCellsY, paint);
@@ -254,6 +306,7 @@ public class MazeView extends View {
 		}
 		
 		// draw ball
+		paint.setAntiAlias(true);
 		paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
 		canvas.drawCircle(mGridOriginX+mBallX, mGridOriginY+mBallY, 0.45f * mCellSize, paint);
 	}
