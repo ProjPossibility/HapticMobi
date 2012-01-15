@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.util.Log;
 import android.view.View;
 
 public class MazeView extends View {
@@ -15,26 +17,31 @@ public class MazeView extends View {
 	private float mCellSize;
 	// maze background color
 	private int mBGColor = 0xFF503010;
+	// color of maze end marker
+	private int mMazeEndMarkerColor = 0xFFFF0000;
 	// grid (maze) origin w.r.t. view
 	private float mGridOriginX, mGridOriginY;
 	// maze wall color
 	private int mWallColor = 0xFFFFFFFF;
 	// maze wall thickness in pixels
 	private float mWallThickness = 2.0f;
-	// pixel coordinates of ball center w.r.t. maze rect
-	private float mBallX = 0.f, mBallY = 0.f;
+//	// pixel coordinates of ball center w.r.t. maze rect
+//	private float mBallX = 0.f, mBallY = 0.f;
 	// discretized ball coordinates
 	// (which cell contains the center of the ball)
 	private int mBallCellX, mBallCellY;
 	// ball offset within its current cell
 	private enum Dir {NONE,NORTH,SOUTH,EAST,WEST};
-	private Dir mBallCellOffset = Dir.NONE;
+//	private Dir mBallCellOffset = Dir.NONE;
+	private Dir mBallMotion = Dir.NONE;
+	private float mBallMotionPct;
 	// ball foreground color
 	private int mBallColor = 0xFF00FFFF;
 	// pre-rendered BG and ball bitmaps
 	Bitmap mBGBitmap = null, mBallBitmap = null;
 	// ball velocity
 	float mBallVX, mBallVY;
+//	private float prevXAcc = 0, prevYAcc = 0;
 	
 	MazeView(Context ctx) {
 		super(ctx);
@@ -103,31 +110,155 @@ public class MazeView extends View {
 		}
 	}
 	
-	public float getBallX() {
-		return mBallX;
-	}
-	
-	public float getBallY() {
-		return mBallY;
-	}
+//	public float getBallX() {
+//		return mBallX;
+//	}
+//	
+//	public float getBallY() {
+//		return mBallY;
+//	}
 	
 	public void setBallPosition(int cellX, int cellY) {
 		// clip to valid range
 		if (cellX < 0) cellX = 0; if (cellX >= mNumCellsX) cellX = mNumCellsX - 1;
 		if (cellY < 0) cellY = 0; if (cellY >= mNumCellsY) cellY = mNumCellsY - 1;
 		
-		// compute ball center position
-		mBallX = mCellSize * (cellX + 0.5f);
-		mBallY = mCellSize * (cellY + 0.5f);
+//		// compute ball center position
+//		mBallX = mCellSize * (cellX + 0.5f);
+//		mBallY = mCellSize * (cellY + 0.5f);
 		
 		// discretized ball position(s)
 		mBallCellX = cellX;
 		mBallCellY = cellY;
-		mBallCellOffset = Dir.NONE;
+//		mBallCellOffset = Dir.NONE;
+		mBallMotion = Dir.NONE;
+		mBallMotionPct = 0.f;
 		
 		invalidate();
 	}
 	
+	private void ballFailedMove(Dir attemptedDir, boolean border)
+	{
+		// ball attempted to move but was blocked by a wall
+		Log.v("ball", "Ball failed move dir=" + attemptedDir + " border=" + border);
+	}
+	
+	private void ballMovedToWall(boolean border)
+	{
+		// ball successfully moved and hit a wall (possibly border)
+		Log.v("ball", "Ball moved to wall, border="+border);
+	}
+	
+	private void ballMotionComplete(Dir lastDir)
+	{
+		// animation callback when ball motion completed
+		Log.v("ball", "Ball completed move dir=" + lastDir);
+		
+		switch (lastDir) {
+		case NORTH:
+			mBallCellY--;
+			if (mBallCellY <= 0)
+				ballMovedToWall(true);
+			else if (mCells[mBallCellY][mBallCellX].northWall)
+				ballMovedToWall(false);
+			break;
+		case SOUTH:
+			mBallCellY++;
+			if (mBallCellY >= mNumCellsY-1)
+				ballMovedToWall(true);
+			else if (mCells[mBallCellY+1][mBallCellX].northWall)
+				ballMovedToWall(false);
+			break;
+		case EAST:
+			mBallCellX++;
+			if (mBallCellX >= mNumCellsX-1)
+				ballMovedToWall(true);
+			else if (mCells[mBallCellY][mBallCellX+1].westWall)
+				ballMovedToWall(false);
+			break;
+		case WEST:
+			mBallCellX--;
+			if (mBallCellX <= 0)
+				ballMovedToWall(true);
+			else if (mCells[mBallCellY][mBallCellX].westWall)
+				ballMovedToWall(false);
+			break;
+		}
+		
+		// reset ball motion state
+		mBallMotion = Dir.NONE;
+		mBallMotionPct = 0.f;
+	}
+	
+	public void moveBallLeft()
+	{
+		if (mBallMotion != Dir.NONE)
+			return;
+		
+		// check west wall of current cell
+		if (mBallCellX <= 0)
+			ballFailedMove(Dir.WEST, true);
+		else if (mCells[mBallCellY][mBallCellX].westWall)
+			ballFailedMove(Dir.WEST, false);
+		else {
+			mBallMotion = Dir.WEST;
+			mBallMotionPct = 0.f;
+			invalidate();
+		}
+	}
+	
+	public void moveBallRight()
+	{
+		if (mBallMotion != Dir.NONE)
+			return;
+		
+		// check west wall of right neighbor cell
+		if (mBallCellX >= mNumCellsX-1)
+			ballFailedMove(Dir.EAST, true);
+		else if (mCells[mBallCellY][mBallCellX+1].westWall)
+			ballFailedMove(Dir.EAST, false);
+		else {
+			mBallMotion = Dir.EAST;
+			mBallMotionPct = 0.f;
+			invalidate();
+		}
+	}
+	
+	public void moveBallUp()
+	{
+		if (mBallMotion != Dir.NONE)
+			return;
+		
+		// check north wall of current cell
+		if (mBallCellY <= 0)
+			ballFailedMove(Dir.NORTH, true);
+		else if (mCells[mBallCellY][mBallCellX].northWall)
+			ballFailedMove(Dir.NORTH, false);
+		else {
+			mBallMotion = Dir.NORTH;
+			mBallMotionPct = 0.f;
+			invalidate();
+		}
+	}
+	
+	public void moveBallDown()
+	{
+		if (mBallMotion != Dir.NONE)
+			return;
+		
+		// check west wall of right neighbor cell
+		if (mBallCellY >= mNumCellsY-1)
+			ballFailedMove(Dir.SOUTH, true);
+		else if (mCells[mBallCellY+1][mBallCellX].northWall)
+			ballFailedMove(Dir.SOUTH, false);
+		else {
+			mBallMotion = Dir.SOUTH;
+			mBallMotionPct = 0.f;
+			invalidate();
+		}
+	}
+	
+/*	
 	private void recomputeBallCellX()
 	{
 		mBallCellX = (int)(mBallX / mCellSize);
@@ -294,13 +425,34 @@ public class MazeView extends View {
 	
 	public void ballDeltaV(float dvx, float dvy)
 	{
+		// if the acceleration is opposite to the current velocity:
+		// increase the effective acceleration
+		if(prevXAcc==0 || prevYAcc==0)
+			{prevXAcc = dvx; prevYAcc = dvy; mBallVX = dvx; mBallVY= dvy; invalidate(); return;}
+		float deltaX, deltaY;
+		deltaX = dvx - prevXAcc;
+		deltaY = dvy - prevYAcc;
+		
+		prevXAcc = dvx;
+		prevYAcc = dvy;
+		dvx = deltaX;
+		dvy = deltaY;
+		final float scale = 1.5f;
+		if (Math.signum(dvx) == -Math.signum(mBallVX))
+			dvx *= scale;
+		if (Math.signum(dvy) == -Math.signum(mBallVY))
+			dvy *= scale;
+		
+		// if the acceleration is larger than a threshold:
+		// apply it to the velocity
 		final float thresh = 1.1f;
-		if (Math.abs(dvx) > thresh || Math.signum(dvx) != Math.signum(mBallVX))
+		if (Math.abs(dvx) > thresh)
 			mBallVX += dvx;
-		if (Math.abs(dvy) > thresh || Math.signum(dvy) != Math.signum(mBallVY))
+		if (Math.abs(dvy) > thresh)
 			mBallVY += dvy;
 		
-		final float vmax = 2.f;
+		// clip the velocity to a maximum magnitude
+		final float vmax = 1.8f;
 		if (mBallVX > vmax)
 			mBallVX = vmax;
 		else if (mBallVX < -vmax)
@@ -312,7 +464,7 @@ public class MazeView extends View {
 		
 		invalidate();
 	}
-	
+*/
 	private void renderMazeBitmaps()
 	{
 		int cellsize = (int) Math.round(mCellSize);
@@ -323,7 +475,7 @@ public class MazeView extends View {
 		Paint paint = new Paint();
 		paint.setColor(mBGColor);
 		bgCanvas.drawRect(0, 0, mCellSize*mNumCellsX, mCellSize*mNumCellsY, paint);
-
+		
 		// draw cell walls
 		int ix, iy;
 		float left, top, right, btm;
@@ -353,6 +505,18 @@ public class MazeView extends View {
 				}
 			}
 		}
+
+		// draw end marker
+		Path path = new Path();
+		bgCanvas.translate((mNumCellsX-0.5f)*mCellSize, (mNumCellsY-0.5f)*mCellSize);
+		float d = mCellSize/4.f;
+		path.moveTo(-d, 0.f);
+		path.lineTo(d, 0.f);
+		path.lineTo(0.f, d);
+		path.close();
+		paint.setColor(mMazeEndMarkerColor);
+		paint.setStyle(Paint.Style.FILL);
+		bgCanvas.drawPath(path, paint);
 		
 		// draw ball
 		mBallBitmap = Bitmap.createBitmap(cellsize, cellsize, Bitmap.Config.ARGB_8888);
@@ -363,36 +527,69 @@ public class MazeView extends View {
 		ballCanvas.drawCircle(radius, radius, 0.45f * mCellSize, paint);
 	}
 	
-	private long mLastDrawTime = -1;
+//	private long mLastDrawTime = -1;
+	private long mAnimStartTime;
 	
 	@Override
 	protected void onDraw(Canvas canvas) {
 
+		// compute ball coordinates in pixels
+		float mBallX = mBallCellX * mCellSize;
+		float mBallY = mBallCellY * mCellSize;
+		if (mBallMotion != Dir.NONE) {
+			// add offset for ball motion animation
+			float delta = mBallMotionPct * mCellSize;
+			Log.v("ballanim", "Animation " + (mBallMotionPct*100.f) + "%  offset=" + delta);
+			if (mBallMotion == Dir.EAST)
+				mBallX += delta;
+			else if (mBallMotion == Dir.WEST)
+				mBallX -= delta;
+			else if (mBallMotion == Dir.NORTH)
+				mBallY -= delta;
+			else if (mBallMotion == Dir.SOUTH)
+				mBallY += delta;
+			// motion animation is done
+			if (mBallMotionPct >= 1.f)
+				ballMotionComplete(mBallMotion);
+		}
+		
+		// compute time since last draw
+		long curTime = System.currentTimeMillis();
+		if (mBallMotionPct <= 0.f)
+			mAnimStartTime = curTime - 50;
+		
+//		float dt = (mLastDrawTime < 0) ? 0.f : (float)(curTime - mLastDrawTime);
+		float dt =  (float)(curTime - mAnimStartTime);
+//		mLastDrawTime = curTime;
+
+		// if we are animating the ball, update the animation parameter
+		if (mBallMotion != Dir.NONE) {
+			mBallMotionPct = dt / 100.f;	// complete motion animation takes 500 ms
+			Log.v("ballanim", "delta-t="+dt+" now at "+(100.f*mBallMotionPct)+"%");
+			if (mBallMotionPct > 1.f)
+				mBallMotionPct = 1.f;
+			invalidate();
+		}
+		
 		if (!mIsMagnified)
 		{
 			if (mBGBitmap== null || mBallBitmap == null)
 				renderMazeBitmaps();
 			
-			float radius = 0.5f*mCellSize;
+//			float radius = 0.5f*mCellSize;
 			Paint paint = new Paint();
 			canvas.drawBitmap(mBGBitmap, mGridOriginX, mGridOriginY, paint);
-			canvas.drawBitmap(mBallBitmap, mGridOriginX+mBallX-radius, mGridOriginY+mBallY-radius, paint);
+			canvas.drawBitmap(mBallBitmap, mGridOriginX+mBallX, mGridOriginY+mBallY, paint);
 			
-			long curTime = System.currentTimeMillis();
-			float dt = (mLastDrawTime < 0) ? 5.f : (float)(curTime - mLastDrawTime);
-			mLastDrawTime = curTime;
-			// scale dt to a reasonable value
-			dt *= 0.1f;
-			
-			// update ball position based on velocity
-			if (mBallVX > 0.f)
-				shiftBallRight(mBallVX*dt);
-			else if (mBallVX < 0.f)
-				shiftBallLeft(-mBallVX*dt);
-			if (mBallVY > 0.f)
-				shiftBallDown(mBallVY*dt);
-			else if (mBallVY < 0.f)
-				shiftBallUp(-mBallVY*dt);
+//			// update ball position based on velocity
+//			if (mBallVX > 0.f)
+//				shiftBallRight(mBallVX*dt);
+//			else if (mBallVX < 0.f)
+//				shiftBallLeft(-mBallVX*dt);
+//			if (mBallVY > 0.f)
+//				shiftBallDown(mBallVY*dt);
+//			else if (mBallVY < 0.f)
+//				shiftBallUp(-mBallVY*dt);
 		}
 		else
 		{
