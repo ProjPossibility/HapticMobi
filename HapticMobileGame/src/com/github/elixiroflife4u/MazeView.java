@@ -7,7 +7,7 @@ import android.view.View;
 
 public class MazeView extends View {
 
-	private boolean magnify = true; // specifies if magnification is on or off. default is on
+	private boolean magnify = false; // specifies if magnification is on or off. default is on
 	private Cell mCells[][];
 	private int mNumCellsX = 1;
 	private int mNumCellsY = 1;
@@ -310,6 +310,7 @@ public class MazeView extends View {
 			}
 			
 			// draw ball
+			paint.setAntiAlias(true);
 			paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
 			canvas.drawCircle(mGridOriginX+mBallX, mGridOriginY+mBallY, 0.45f * mCellSize, paint);
 		}
