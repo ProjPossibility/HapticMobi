@@ -1,0 +1,48 @@
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="top"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/start"
+            android:layout_width="124dp"
+            android:layout_height="124dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="29dp"
+            android:layout_weight="1.35"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_centerHorizontal="true"
+            android:text="START"
+            android:textSize="15pt" />
+
+        <Button
+            android:id="@+id/easy"
+            android:layout_width="169dp"
+            android:layout_height="50dp"
+            android:layout_below="@+id/start"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:text="EASY" />
+       
+        <Button
+            android:id="@+id/medium"
+            android:layout_width="169dp"
+            android:layout_height="50dp"
+            android:layout_below="@+id/easy"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="26dp"
+            android:text="MEDIUM" />
+
+        <Button
+            android:id="@+id/difficult"
+            android:layout_width="169dp"
+            android:layout_height="50dp"
+            android:layout_below="@+id/medium"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="26dp"
+            android:text="DIFFICULT" />
+
+    </RelativeLayout>
