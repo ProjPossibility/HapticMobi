@@ -60,7 +60,7 @@ public class BouncingBallActivity extends Activity implements Callback, SensorLi
 		super.onPause();
 
 		model.setVibrator(null);
-
+		
 		sensorMgr.unregisterListener(this, SENSOR_ACCELEROMETER);
 		sensorMgr = null;
 

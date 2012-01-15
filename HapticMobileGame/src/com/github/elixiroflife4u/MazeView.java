@@ -7,7 +7,7 @@ import android.view.View;
 
 public class MazeView extends View {
 
-	private boolean magnify = false; // specifies if magnification is on or off. default is on
+	private boolean mIsMagnified = true; // specifies if magnification is on or off. default is on
 	private Cell mCells[][];
 	private int mNumCellsX = 1;
 	private int mNumCellsY = 1;
@@ -45,6 +45,18 @@ public class MazeView extends View {
 		mGridOriginY = 0.5f * (h - mCellSize * mNumCellsY);
 		
 		setBallPosition(mBallCellX, mBallCellY);
+	}
+	
+	// sets mIsMagnified to specified param
+	public void setMagnify(boolean isMagnified)
+	{
+		mIsMagnified = isMagnified;
+	}
+	
+	// toggles mIsMagnified, when no param is provided
+	public void setMagnify()
+	{
+		mIsMagnified = !mIsMagnified;
 	}
 	
 	public void setGridDim(int cellsAcross, int cellsDown) {
@@ -272,7 +284,7 @@ public class MazeView extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 
-		if (!magnify)
+		if (!mIsMagnified)
 		{
 			// draw maze background (may not fill entire screen)
 			Paint paint = new Paint();
@@ -319,22 +331,66 @@ public class MazeView extends View {
 			Paint paint = new Paint();
 			// draw ball
 			paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
-			canvas.drawCircle( (mGridOriginX+mBallX*4)%canvas.getWidth() , (mGridOriginY+mBallY*7)%canvas.getHeight(), 0.45f * mCellSize * 4, paint);
+			canvas.drawCircle( canvas.getWidth()/2 , ((mGridOriginY+mBallY)/(mCellSize * mNumCellsY))*canvas.getHeight(), 0.45f * mCellSize * 4, paint);
 			
+			// Calculate intervals: coordinate range ==> cell number
+			int intervalX = (int) canvas.getWidth()/mNumCellsX;
+			int intervalY = (int) canvas.getHeight()/mNumCellsY;
+			System.err.println("intervalx = " + intervalX + "  intervaly = " + intervalY + "  X=" + (mGridOriginX+mBallX) + "  Y=" + (mGridOriginY+mBallY));
 			// Get cells to display
-			int x1 = ((int)(mGridOriginX+mBallX)%mNumCellsX);
-			//int x2 = (int) (((mGridOriginX+mBallX)%mNumCellsX) + 0.5);
-			int y1 = ((int)(mGridOriginY+mBallY)%mNumCellsY);
-			//int y2 = (int) (((mGridOriginY+mBallY)%mNumCellsY) + 0.5);
-			System.err.println ("x1" + x1 + "y1" + y1);
-			Cell c1 = mCells[y1][x1];
-			//Cell c2 = mCells[y2][x2];
-			
+			int cell_x1 = (int) (((mGridOriginX+mBallX)/intervalX));
+			//int cell_x2 = ++cell_x1; // draw only consecutive vertical two cells
+			int cell_y1 = (int) (((mGridOriginY+mBallY)/intervalY));
+			int cell_y2 = cell_y1 + 1;
+			System.err.println ("x1 " + cell_x1 + "  y1 " + cell_y1 + "  mBallY=" + mBallY);
+			Cell c1 = mCells[cell_y1][cell_x1];
+			Cell c2 = mCells[cell_y2][cell_x1];
+//			if ((mBallY) >= ((1+cell_y1)*intervalY))
+//			{
+//				System.err.println("bottom");
+//				canvas.drawCircle(canvas.getWidth()/2, (canvas.getHeight()*0.75f), 0.35f * mCellSize * 4, paint);
+//			}
+//			else
+//			{
+//				System.err.println("first half");
+//				canvas.drawCircle(canvas.getWidth()/2, canvas.getHeight()/4, 0.35f * mCellSize * 4, paint);
+//			}
 			paint.setColor(mBGColor);
+			paint.setStrokeWidth(53.5f);
 			// Display cells
+			if (c1.northWall)
+			{
+				canvas.drawLine(0, 0, canvas.getWidth(), 0, paint);
+			}
 			if (c1.eastWall)
 			{
-				canvas.drawLine(canvas.getWidth(), mGridOriginY, canvas.getWidth(), canvas.getHeight()/2, paint);
+				canvas.drawLine(canvas.getWidth(), 0, canvas.getWidth(), canvas.getHeight()/2, paint);
+			}
+			if (c1.southWall)
+			{
+				canvas.drawLine(0, canvas.getHeight()/2, canvas.getWidth(), canvas.getHeight()/2, paint);
+			}
+			if (c1.westWall)
+			{
+				canvas.drawLine(0, 0, 0, canvas.getHeight()/2, paint);
+			}
+			
+			// bottom of screen cell
+			if (c2.northWall)
+			{
+				canvas.drawLine(0, canvas.getHeight()/2, canvas.getWidth(), canvas.getHeight()/2, paint);
+			}
+			if (c2.eastWall)
+			{
+				canvas.drawLine(canvas.getWidth(), canvas.getHeight()/2, canvas.getWidth(), canvas.getHeight(), paint);
+			}
+			if (c2.southWall)
+			{
+				canvas.drawLine(0, canvas.getHeight(), canvas.getWidth(), canvas.getHeight(), paint);
+			}
+			if (c2.westWall)
+			{
+				canvas.drawLine(0, canvas.getHeight()/2, 0, canvas.getHeight(), paint);
 			}
 			
 		}
