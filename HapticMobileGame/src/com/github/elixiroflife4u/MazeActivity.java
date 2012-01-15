@@ -6,6 +6,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -17,7 +19,7 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	private MazeView mazeview;
 	private SensorManager mSensorManager;
     private Sensor mAccelerometer;
-    private GestureDetector gd; // to detect double taps to toggle magnification
+    private WakeLock mWakeLock;
     
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -27,6 +29,11 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
         if(mAccelerometer == null){ //should die here.
         	Log.v("Error", "Could not find an accelarometer. Should have failed here.");
         }
+        
+        // Get an instance of the PowerManager
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        // Create a bright wake lock
+        mWakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass().getName());
         
 		Bundle extras = getIntent().getExtras();
 		int nx = 4, ny = 7;
@@ -84,12 +91,14 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	protected void onPause() {
 		super.onPause();
 		mSensorManager.unregisterListener(this);
+		mWakeLock.release();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+		mWakeLock.acquire();
 	}
 
 
@@ -101,6 +110,36 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	@Override
 	public void onSensorChanged(SensorEvent event) {
 		// TODO Auto-generated method stub
+		if (event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
+            return;
+//		long curTime = System.currentTimeMillis();
+		// only allow one update every 50ms, otherwise updates come way too fast
+//		if (lastSensorUpdate == -1 || (curTime - lastSensorUpdate) > 5) {
+//			lastSensorUpdate = curTime;
+//			mSensorTimeStamp = event.timestamp;
+//			mCpuTimeStamp = System.nanoTime();
+			System.out.println("x: "+ (event.values[0]));
+			System.out.println("y: "+ (event.values[1]));
+			System.out.println("z: "+ (event.values[2]));
+			float accx = event.values[0];
+			float accy = event.values[1];
+			
+			//final float shiftAmt = 4.f;
+			//final float thresh = 1.2f;
+			
+//			if(accx > thresh)
+//				mazeview.shiftBallLeft(shiftAmt);
+//			if(accx < -thresh)
+//				mazeview.shiftBallRight(shiftAmt);
+//			if(accy > thresh)
+//				mazeview.shiftBallDown(shiftAmt);
+//			if(accy < -thresh)
+//				mazeview.shiftBallUp(shiftAmt);
+			
+			mazeview.ballDeltaV(-accx, accy);
+			
+			
+//		}
 		
 	}
 	
