@@ -65,13 +65,13 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 			Log.v("maze", "touch x="+x+" y="+y);
 			
 			if (y < 200.f)
-				mazeview.shiftBallUp(8.f);
+				mazeview.moveBallUp(); //shiftBallUp(8.f);
 			else if (y > 500.f)
-				mazeview.shiftBallDown(8.f);
+				mazeview.moveBallDown(); //shiftBallDown(8.f);
 			else if (x < 200.f)
-				mazeview.shiftBallLeft(8.f);
+				mazeview.moveBallLeft(); //shiftBallLeft(8.f);
 			else
-				mazeview.shiftBallRight(8.f);
+				mazeview.moveBallRight(); //shiftBallRight(8.f);
 			return true;
 		}
 		return false;
@@ -97,6 +97,8 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 		
 	}
 
+	private float lastAccX, lastAccY;
+	
 	@Override
 	public void onSensorChanged(SensorEvent event) {
 		// TODO Auto-generated method stub
@@ -108,9 +110,7 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 //			lastSensorUpdate = curTime;
 //			mSensorTimeStamp = event.timestamp;
 //			mCpuTimeStamp = System.nanoTime();
-			System.out.println("x: "+ (event.values[0]));
-			System.out.println("y: "+ (event.values[1]));
-			System.out.println("z: "+ (event.values[2]));
+			System.out.println("x: "+ (event.values[0])+"  y: "+ (event.values[1])+"  z: "+ (event.values[2]));
 			float accx = event.values[0];
 			float accy = event.values[1];
 			
@@ -126,9 +126,21 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 //			if(accy < -thresh)
 //				mazeview.shiftBallUp(shiftAmt);
 			
-			mazeview.ballDeltaV(-accx, accy);
+//			mazeview.ballDeltaV(-accx, accy);
 			
+			final float thresh = 3f;
 			
+			if (accx > thresh && lastAccX < thresh)
+				mazeview.moveBallLeft();
+			else if (accx < -thresh && lastAccX > -thresh)
+				mazeview.moveBallRight();
+			if (accy > thresh && lastAccY < thresh)
+				mazeview.moveBallDown();
+			else if (accy < -thresh && lastAccY > -thresh)
+				mazeview.moveBallUp();
+			
+			lastAccX = accx;
+			lastAccY = accy;
 //		}
 		
 	}
