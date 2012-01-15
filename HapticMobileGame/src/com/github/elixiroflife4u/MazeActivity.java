@@ -1,20 +1,31 @@
 package com.github.elixiroflife4u;
 
 import android.app.Activity;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-public class MazeActivity extends Activity implements OnTouchListener {
+public class MazeActivity extends Activity implements OnTouchListener, SensorEventListener{
 
 	private MazeView mazeview;
-	
+	private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    
 	@Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
-		
+    	mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if(mAccelerometer == null){ //should die here.
+        	Log.v("Error", "Could not find an accelarometer. Should have failed here.");
+        }
+        
 		Bundle extras = getIntent().getExtras();
 		int nx = 4, ny = 7;
 		if (extras != null)
@@ -56,6 +67,30 @@ public class MazeActivity extends Activity implements OnTouchListener {
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		mSensorManager.unregisterListener(this);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+	}
+
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
