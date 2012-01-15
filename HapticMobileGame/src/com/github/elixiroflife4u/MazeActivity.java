@@ -144,15 +144,16 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 			
 //			mazeview.ballDeltaV(-accx, accy);
 			
-			final float thresh = 3f;
+			final float thresh = 3.f;
+			final float thresh2 = 2.7f;
 			
-			if (accx > thresh && lastAccX < thresh)
+			if (accx > thresh && Math.abs(lastAccX) < thresh2) //lastAccX < thresh)
 				mazeview.moveBallLeft();
-			else if (accx < -thresh && lastAccX > -thresh)
+			else if (accx < -thresh && Math.abs(lastAccX) < thresh2) //lastAccX > -thresh)
 				mazeview.moveBallRight();
-			if (accy > thresh && lastAccY < thresh)
+			if (accy > thresh && Math.abs(lastAccY) < thresh2) //lastAccY < thresh)
 				mazeview.moveBallDown();
-			else if (accy < -thresh && lastAccY > -thresh)
+			else if (accy < -thresh && Math.abs(lastAccY) < thresh2) //lastAccY > -thresh)
 				mazeview.moveBallUp();
 			
 			lastAccX = accx;
