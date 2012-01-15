@@ -1,4 +1,5 @@
 *.class
 HapticMobileGame/bin/*
 HapticMobileGame/gen/*
-
+.DS_Store*
+.metadata
