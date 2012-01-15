@@ -8,15 +8,15 @@
 
         <Button
             android:id="@+id/start"
-            android:layout_width="124dp"
-            android:layout_height="124dp"
+            android:layout_width="165dp"
+            android:layout_height="165dp"
             android:layout_alignParentTop="true"
             android:layout_marginTop="29dp"
             android:layout_weight="1.35"
             android:gravity="center_vertical|center_horizontal"
             android:layout_centerHorizontal="true"
-            android:text="START"
-            android:textSize="15pt" />
+            android:background="@drawable/start_button"
+            />
 
         <Button
             android:id="@+id/easy"
@@ -25,7 +25,8 @@
             android:layout_below="@+id/start"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="50dp"
-            android:text="EASY" />
+            android:background="@drawable/easy_button"
+            />
        
         <Button
             android:id="@+id/medium"
@@ -34,7 +35,7 @@
             android:layout_below="@+id/easy"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="26dp"
-            android:text="MEDIUM" />
+            android:background="@drawable/medium_button"/>
 
         <Button
             android:id="@+id/difficult"
@@ -43,6 +44,6 @@
             android:layout_below="@+id/medium"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="26dp"
-            android:text="DIFFICULT" />
+            android:background="@drawable/difficult_button"/>
 
     </RelativeLayout>
