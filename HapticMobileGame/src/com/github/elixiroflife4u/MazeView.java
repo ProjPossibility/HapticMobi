@@ -64,7 +64,10 @@ public class MazeView extends View {
 	// toggles mIsMagnified, when no param is provided
 	public void setMagnify()
 	{
-		mIsMagnified = !mIsMagnified;
+		if (mIsMagnified)
+			mIsMagnified = false;
+		else
+			mIsMagnified = true;
 	}
 	
 	public void setGridDim(int cellsAcross, int cellsDown) {
@@ -393,21 +396,22 @@ public class MazeView extends View {
 		}
 		else
 		{
+			
 			Paint paint = new Paint();
 			// draw ball
 			paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
-			canvas.drawCircle( canvas.getWidth()/2 , ((mGridOriginY+mBallY)/(mCellSize * mNumCellsY))*canvas.getHeight(), 0.45f * mCellSize * 4, paint);
-			
+			canvas.drawCircle( canvas.getWidth()/2 , (((mGridOriginY+mBallY)/((float)(mCellSize * mNumCellsY)))*((float)canvas.getHeight())), 0.35f * canvas.getWidth(), paint);
+			//System.err.println("grid coord y=" + (mGridOriginY+mBallY)+ "grid height=" + (mCellSize * mNumCellsY) + "canvas height=" + canvas.getHeight());
 			// Calculate intervals: coordinate range ==> cell number
 			int intervalX = (int) canvas.getWidth()/mNumCellsX;
 			int intervalY = (int) canvas.getHeight()/mNumCellsY;
-			System.err.println("intervalx = " + intervalX + "  intervaly = " + intervalY + "  X=" + (mGridOriginX+mBallX) + "  Y=" + (mGridOriginY+mBallY));
+			//System.err.println("intervalx = " + intervalX + "  intervaly = " + intervalY + "  X=" + (mGridOriginX+mBallX) + "  Y=" + (mGridOriginY+mBallY));
 			// Get cells to display
 			int cell_x1 = (int) (((mGridOriginX+mBallX)/intervalX));
 			//int cell_x2 = ++cell_x1; // draw only consecutive vertical two cells
 			int cell_y1 = (int) (((mGridOriginY+mBallY)/intervalY));
 			int cell_y2 = cell_y1 + 1;
-			System.err.println ("x1 " + cell_x1 + "  y1 " + cell_y1 + "  mBallY=" + mBallY);
+			//System.err.println ("x1 " + cell_x1 + "  y1 " + cell_y1 + "  mBallY=" + mBallY);
 			Cell c1 = mCells[cell_y1][cell_x1];
 			Cell c2 = mCells[cell_y2][cell_x1];
 //			if ((mBallY) >= ((1+cell_y1)*intervalY))

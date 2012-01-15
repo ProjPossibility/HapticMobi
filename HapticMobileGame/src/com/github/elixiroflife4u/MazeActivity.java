@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
-import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -20,11 +20,12 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private WakeLock mWakeLock;
-    private GestureDetector gd;
+    
     
 	@Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
+
     	mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if(mAccelerometer == null){ //should die here.
@@ -56,20 +57,22 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 		mazeview.setGridDim(nx,ny);
 		mazeview.setBallPosition(0, 0);
 		setContentView(mazeview);
-
-		gd = new GestureDetector(this, new MyGestureListener()); 
-
+		
 		mazeview.setOnTouchListener(this);
 	}
+
+	public boolean onKeyDown(int keycode, KeyEvent event ) {
+		 if(keycode == KeyEvent.KEYCODE_MENU){
+		 System.err.println ("MENU PRESSED");
+		 mazeview.setMagnify();
+		 mazeview.refreshDrawableState();
+		 }
+		 return super.onKeyDown(keycode,event);  
+		}
 	
-	public boolean onTouch(View v, MotionEvent event)
-	{
-		return this.onTouchEvent(v, event);
-	}
-	public boolean onTouchEvent(View v, MotionEvent event) {
-		System.err.println("touched");
-		//gd.onTouchEvent(event);
-		//return super.onTouchEvent(event);
+
+	public boolean onTouch(View v, MotionEvent event) {
+
 		if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
 			float x = event.getX();
 			float y = event.getY();
@@ -119,9 +122,9 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 //			lastSensorUpdate = curTime;
 //			mSensorTimeStamp = event.timestamp;
 //			mCpuTimeStamp = System.nanoTime();
-			System.out.println("x: "+ (event.values[0]));
-			System.out.println("y: "+ (event.values[1]));
-			System.out.println("z: "+ (event.values[2]));
+//			System.out.println("x: "+ (event.values[0]));
+//			System.out.println("y: "+ (event.values[1]));
+//			System.out.println("z: "+ (event.values[2]));
 			float accx = event.values[0];
 			float accy = event.values[1];
 			
@@ -145,39 +148,5 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	}
 	
 	
-	
-	// GESTURE CLASS:
-	class MyGestureListener extends GestureDetector.SimpleOnGestureListener{
-		public GestureDetector detector; 
-		
-		 @Override  
-	     public boolean onDoubleTap(MotionEvent e)  
-	     {
-			 	mazeview.setMagnify();
-			 	System.err.println("DOUBLE TAP");
-			 	return true;
-	     }
-		 @Override
-		 public boolean onSingleTapConfirmed(MotionEvent event)
-		 {
-			 System.err.println("SINGLE TAP?");
-			 if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-					float x = event.getX();
-					float y = event.getY();
-					Log.v("maze", "touch x="+x+" y="+y);
-					
-					if (y < 200.f)
-						mazeview.shiftBallUp(8.f);
-					else if (y > 500.f)
-						mazeview.shiftBallDown(8.f);
-					else if (x < 200.f)
-						mazeview.shiftBallLeft(8.f);
-					else
-						mazeview.shiftBallRight(8.f);
-					return true;
-				}
-				return false;
-		 }
-	}
 	
 }
