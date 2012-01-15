@@ -1,5 +1,6 @@
 package com.github.elixiroflife4u;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -188,6 +189,9 @@ public class MazeView extends View {
 		// reset ball motion state
 		mBallMotion = Dir.NONE;
 		mBallMotionPct = 0.f;
+		
+		
+		//((MazeActivity) this.getContext()).won();
 	}
 	
 	public void moveBallLeft()
@@ -533,6 +537,7 @@ public class MazeView extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 
+		System.err.println ("On DDRAW");
 		// compute ball coordinates in pixels
 		float mBallX = mBallCellX * mCellSize;
 		float mBallY = mBallCellY * mCellSize;
@@ -597,7 +602,7 @@ public class MazeView extends View {
 			Paint paint = new Paint();
 			// draw ball
 			paint.setColor(mBallColor);				// 0.45 instead of 0.5 to be slightly smaller than cell
-			canvas.drawCircle( canvas.getWidth()/2 , (((mGridOriginY+mBallY)/((float)(mCellSize * mNumCellsY)))*((float)canvas.getHeight())), 0.35f * canvas.getWidth(), paint);
+			//canvas.drawCircle( canvas.getWidth()/2 , (((mGridOriginY+mBallY)/((float)(mCellSize * mNumCellsY)))*((float)canvas.getHeight())), 0.35f * canvas.getWidth(), paint);
 			//System.err.println("grid coord y=" + (mGridOriginY+mBallY)+ "grid height=" + (mCellSize * mNumCellsY) + "canvas height=" + canvas.getHeight());
 			// Calculate intervals: coordinate range ==> cell number
 			int intervalX = (int) canvas.getWidth()/mNumCellsX;
@@ -611,16 +616,16 @@ public class MazeView extends View {
 			//System.err.println ("x1 " + cell_x1 + "  y1 " + cell_y1 + "  mBallY=" + mBallY);
 			Cell c1 = mCells[cell_y1][cell_x1];
 			Cell c2 = mCells[cell_y2][cell_x1];
-//			if ((mBallY) >= ((1+cell_y1)*intervalY))
-//			{
-//				System.err.println("bottom");
-//				canvas.drawCircle(canvas.getWidth()/2, (canvas.getHeight()*0.75f), 0.35f * mCellSize * 4, paint);
-//			}
-//			else
-//			{
-//				System.err.println("first half");
-//				canvas.drawCircle(canvas.getWidth()/2, canvas.getHeight()/4, 0.35f * mCellSize * 4, paint);
-//			}
+			if ((mBallY/mCellSize) <= cell_y1)
+			{
+				System.err.println("TOP");
+				canvas.drawCircle(canvas.getWidth()/2, (canvas.getHeight()/4f), 0.35f * mCellSize * 4, paint);
+			}
+			else
+			{
+				System.err.println("BOTTOM");
+				canvas.drawCircle(canvas.getWidth()/2, (canvas.getHeight()/0.75f), 0.35f * mCellSize * 4, paint);
+			}
 			paint.setColor(mBGColor);
 			paint.setStrokeWidth(53.5f);
 			// Display cells

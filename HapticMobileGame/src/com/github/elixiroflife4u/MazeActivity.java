@@ -1,6 +1,7 @@
 package com.github.elixiroflife4u;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -20,6 +21,7 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 	private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private WakeLock mWakeLock;
+    
     
     
 	@Override
@@ -65,7 +67,7 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 		 if(keycode == KeyEvent.KEYCODE_MENU){
 		 System.err.println ("MENU PRESSED");
 		 mazeview.setMagnify();
-		 mazeview.refreshDrawableState();
+		 mazeview.invalidate();
 		 }
 		 return super.onKeyDown(keycode,event);  
 		}
@@ -159,6 +161,11 @@ public class MazeActivity extends Activity implements OnTouchListener, SensorEve
 		
 	}
 	
-	
+	public void won()
+	{
+		Intent intent = new Intent(MazeActivity.this, Menu.class);
+        startActivity(intent);      
+        finish();
+	}
 	
 }
