@@ -2,17 +2,16 @@ package com.github.elixiroflife4u;
 import java.util.ArrayList;
 import java.util.Stack;
 
+// This class generates a random maze of a given size
 public class Maze {
 	//	maze is a 2-d grid of Cells
-	// each cell is of of size 1 by 1 sperated by one in index
 	// initializer will allocate the given number of cell and set up the neighbors of each cell
-		
 	private Cell maze[][];
 	private int mazeRows; // the y axis (running from north to south)
 	private int mazeCols; // the x axis (running from west to east)
 	
 	Maze(int rows, int cols){
-		maze = new Cell[rows][cols]; //bcoz everything is allocated on heap
+		maze = new Cell[rows][cols]; //because everything is allocated on heap
 		this.mazeRows = rows;
 		this.mazeCols = cols;
 		init(); 
@@ -30,7 +29,7 @@ public class Maze {
 		for(int i = 0; i < mazeRows; i++){
 			for(int j =0; j < mazeCols; j++){
 				Cell currCell = maze[i][j];
-				//we can have atmost 4 neighbors per cell
+				//we can have at most 4 neighbors per cell
 				ArrayList<Cell> neighborList = new ArrayList<Cell>();
 				if (i != 0) { //add neighbor to the North of you
 					neighborList.add(maze[i-1][j]);
@@ -99,7 +98,7 @@ public class Maze {
 						return false;
 				}
 				else{
-					// nortwall must be present
+					// north wall must be present
 					if(!curr.northWall)
 						return false;
 				}

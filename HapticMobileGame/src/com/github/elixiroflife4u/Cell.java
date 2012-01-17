@@ -1,15 +1,17 @@
 package com.github.elixiroflife4u;
+
 import java.util.ArrayList;
 import java.util.Random;
-//refer to wikipedia article for more information
+
+//model class represents a maze grid cell
+//refer to Wikipedia article "Maze generation" for more information
 public class Cell {
-	//common to all Cell objs
+	//common to all Cell objects
 	static Random r = new Random();
 	//per object
 	private boolean visited = false;
 	private boolean startCell = false; //not sure about these.
 	private boolean endCell = false;
-	
 	//wall related information. true indicates that a wall is present.
 	public boolean northWall = true;
 	public boolean southWall = true;
@@ -21,7 +23,7 @@ public class Cell {
 	
 	public ArrayList<Cell> neighbors;
 	
-	//contructors
+	//constructors
 	Cell(int x, int y){
 		this.xCoord = x;
 		this.yCoord = y;
