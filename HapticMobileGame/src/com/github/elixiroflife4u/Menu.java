@@ -13,10 +13,10 @@ public class Menu extends Activity{
 	
 	// default level is easy
 	private String level = "easy";
-	private int colorSelect = 0xFFFF0000;
-	private int colorNorm = 0xFFFFFFFF;
-	private int colorTextSelect = 0xFFFFFFFF;
-	private int colorTextNorm = 0xff000000;
+//	private int colorSelect = 0xFFFF0000;
+//	private int colorNorm = 0xFFFFFFFF;
+//	private int colorTextSelect = 0xFFFFFFFF;
+//	private int colorTextNorm = 0xff000000;
 
 	 @Override
 	    public void onCreate(Bundle savedInstanceState) {
